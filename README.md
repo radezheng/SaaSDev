@@ -49,6 +49,8 @@ SaaS Accelerator 在应用形态上把这些能力拆成了：
 - Unsubscribe / Deprovision
 - 安全：密钥管理、RBAC、审计日志
 
+[Python MVP 示例参考](https://github.com/mason1002/ms-mkp-py-mvp)
+
 ---
 
 ## 3. 参考架构（可替换任何语言与部署形态）
