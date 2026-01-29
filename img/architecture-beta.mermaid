@@ -1,0 +1,53 @@
+flowchart LR
+  subgraph marketplace["Microsoft Commercial Marketplace"]
+    fulfill_api["SaaS Fulfillment API"]
+    meter_api["Marketplace Metering"]
+  end
+
+  subgraph publisher["Publisher Cloud / Your SaaS"]
+    subgraph web["Web Layer"]
+      landing["Landing Page / Customer Portal"]
+      webhook["Webhook Endpoint"]
+      admin["Admin Portal (Optional)"]
+    end
+
+    subgraph core["Core Services"]
+      saas_service["SaaS Provisioning Service"]
+      metering["Usage Aggregator / Metering Service"]
+      scheduler["Scheduler / Jobs (Optional)"]
+    end
+
+    db[("Subscription & Audit DB")]
+    kv[("Secrets (Key Vault / KMS)")]
+    mon["Monitoring & Logs"]
+  end
+
+  fulfill_api --> landing
+  landing --> saas_service
+  saas_service --> db
+  saas_service --> kv
+  webhook --> saas_service
+  saas_service --> fulfill_api
+  metering --> meter_api
+  scheduler --> metering
+  landing --> mon
+  webhook --> mon
+  admin --> mon
+
+  %% =========================
+  %% Styling (colors)
+  %% =========================
+  style marketplace fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,color:#0D47A1
+  style publisher fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,color:#4A148C
+  style web fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+  style core fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100
+
+  classDef api fill:#E1F5FE,stroke:#0288D1,stroke-width:1.5px,color:#01579B
+  classDef compute fill:#F1F8E9,stroke:#7CB342,stroke-width:1.5px,color:#33691E
+  classDef data fill:#FFFDE7,stroke:#FDD835,stroke-width:1.5px,color:#F57F17
+  classDef ops fill:#ECEFF1,stroke:#546E7A,stroke-width:1.5px,color:#263238
+
+  class fulfill_api,meter_api api
+  class landing,webhook,admin,saas_service,metering,scheduler compute
+  class db,kv data
+  class mon ops

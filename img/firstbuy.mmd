@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  participant Buyer as 客户（Buyer）
+
+  box #E3F2FD Platform (Microsoft Commercial Marketplace)
+    participant MP as 平台：Marketplace
+    participant SF as 平台：SaaS Fulfillment API
+  end
+
+  box #E8F5E9 Your implementation (Publisher SaaS)
+    participant LP as 你方：Landing Page
+    participant SaaS as 你方：SaaS Backend
+    participant DB as 你方：Subscription DB
+  end
+
+  Note over MP,SF: 平台侧（Marketplace 提供）
+  Note over LP,DB: 你方实现侧（Publisher SaaS 要实现）
+
+  Buyer->>MP: Purchase SaaS Offer/Plan
+  MP->>LP: Redirect (marketplaceToken)
+  LP->>SF: Resolve(marketplaceToken)
+  SF-->>LP: subscriptionId, offerId, planId, purchaser info
+  LP->>SaaS: Provision request (subscriptionId + customer inputs)
+  SaaS->>DB: Upsert subscription mapping + status
+  SaaS-->>LP: Provision result
+  alt Auto activation
+    LP->>SF: Activate(subscriptionId, planId)
+    SF-->>LP: Activated
+    LP-->>Buyer: Show success / enter app
+  else Pending activation
+    LP-->>Buyer: Show "Pending activation" + next steps
+  end

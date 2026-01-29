@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+
+  box #E3F2FD Platform (Microsoft Commercial Marketplace)
+    participant MP as 平台：Marketplace
+    participant SF as 平台：SaaS Fulfillment API
+  end
+
+  box #E8F5E9 Your implementation (Publisher SaaS)
+    participant WH as 你方：Webhook
+    participant SaaS as 你方：SaaS Backend
+    participant DB as 你方：Subscription DB
+  end
+
+  Note over MP,SF: 平台侧（Marketplace 提供）
+  Note over WH,DB: 你方实现侧（Publisher SaaS 要实现）
+
+  MP->>WH: Notify change (plan/quantity)
+  WH->>SaaS: Validate + enqueue event
+  SaaS->>SF: Get operation/status (poll)
+  SF-->>SaaS: Operation status
+  alt Accepted
+    SaaS->>DB: Update subscription + apply new entitlements
+    SaaS-->>MP: Acknowledge/complete (per API)
+  else Rejected
+    SaaS->>DB: Record rejection reason
+    SaaS-->>MP: Reject update (per API)
+  end

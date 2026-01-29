@@ -1,0 +1,29 @@
+sequenceDiagram
+  autonumber
+
+  box #E8F5E9 Your implementation (Publisher SaaS)
+    participant App as 你方：产品（Your Product）
+    participant Agg as 你方：Usage Aggregator
+    participant DB as 你方：Usage/Audit DB
+  end
+
+  box #E3F2FD Platform (Microsoft Commercial Marketplace)
+    participant Meter as 平台：Marketplace Metering
+  end
+
+  Note over Meter: 平台侧（Marketplace 提供）
+  Note over App,DB: 你方实现侧（Publisher SaaS 要实现）
+
+  App->>Agg: Emit raw usage events
+  Agg->>DB: Persist raw usage (idempotent)
+  loop Every N minutes/hour
+    Agg->>DB: Aggregate (subscription + dimension)
+    Agg->>Meter: Emit usage event
+    alt Success
+      Meter-->>Agg: 2xx + usageEventId
+      Agg->>DB: Mark reported + store response
+    else Failure
+      Meter-->>Agg: error
+      Agg->>DB: Record failure + schedule retry
+    end
+  end
