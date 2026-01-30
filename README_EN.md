@@ -93,6 +93,35 @@ You typically need to provide:
 - **Webhook / Notification URL** (endpoint for subscription change notifications)
 - **Entra ID / AAD config** (Tenant ID / App ID / Secret, depending on auth mode)
 
+#### 4.3.1 Required: Register an application in Microsoft Entra ID (App Registration)
+
+This step is **required** for both **SaaS Fulfillment APIs / Marketplace Metering APIs**:
+
+- When your backend calls Fulfillment/Metering APIs, you must send `Authorization: Bearer <access_token>`. The token is obtained via **client credentials** using your Entra app registration.
+- Your webhook endpoint must also be able to receive and validate `Authorization: Bearer <jwt>` sent by Microsoft (JWT validation must match the Entra Tenant/App info you configured in Partner Center Technical configuration).
+
+Minimum items you need in practice:
+
+1. Create an App Registration in your Entra tenant (single-tenant recommended)
+2. Create a `client secret` or configure a certificate (certificate recommended; secrets must be rotatable)
+3. **Create the service principal (Enterprise Application) for the Marketplace SaaS API resource in the same Entra tenant** (this is commonly missed)
+
+   - Fixed resource ID: `20e940b3-4c77-4b0b-9a53-9e16a1b010a7`
+   - Purpose: ensure the corresponding Enterprise Application (service principal) exists in your tenant, so you can request and use access tokens for Fulfillment/Metering.
+   - Azure CLI example:
+
+    ```bash
+    az login --tenant <TENANT_ID>
+    az ad sp create --id 20e940b3-4c77-4b0b-9a53-9e16a1b010a7
+    ```
+
+4. The `scope` for token acquisition is fixed to: `20e940b3-4c77-4b0b-9a53-9e16a1b010a7/.default`
+5. Fill Entra Tenant ID / App ID etc. into Partner Center Technical configuration (used for webhook `aud/tid` validation and platform identification)
+
+Official guide (strongly recommended to align with):
+
+- [Register a SaaS application](https://learn.microsoft.com/partner-center/marketplace-offers/pc-saas-registration)
+
 > SaaS Accelerator deployment scripts can create the required App Registration and write values to config/database. Your implementation can use IaC/scripts or manual configuration; the important part is that values are consistent and rotatable.
 
 ---
