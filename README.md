@@ -87,6 +87,31 @@ SaaS Accelerator 在应用形态上把这些能力拆成了：
 - **Webhook / Notification URL**（Marketplace 推送订阅变更事件的入口）
 - **Entra ID / AAD 配置**（Tenant ID / App ID / Secret 等，取决于认证方式）
 
+#### 4.3.1 必须：在 Microsoft Entra ID 注册应用（App Registration）
+
+这一步对于 **SaaS Fulfillment APIs / Marketplace Metering APIs** 来说是 **必需**：
+
+- 你方服务端调用 Fulfillment/Metering API 需要 `Authorization: Bearer <access_token>`，该 token 来自你注册的 Entra 应用使用 **client credentials** 获取。
+- 你方 Webhook 端点也必须能接收并验证 Microsoft 发送的 `Authorization: Bearer <jwt>`（JWT 校验需要你在 Partner Center 技术配置里填写的 Entra Tenant/App 信息一致）。
+
+落地时你需要准备的最小项：
+
+1) 在 Entra 租户中创建 App Registration（建议 single-tenant）
+2) 生成 `client secret` 或配置证书（推荐证书；secret 必须可轮换）
+3) **在同一 Entra 租户中注册 Marketplace SaaS API resource 的服务主体（Service Principal）**（很多团队会漏掉这一步）
+   - 固定 resource id：`20e940b3-4c77-4b0b-9a53-9e16a1b010a7`
+   - 作用：让你的租户里存在该资源对应的 Enterprise Application（service principal），以便后续按文档获取并使用面向 Fulfillment/Metering 的访问令牌。
+   - Azure CLI 示例：
+```bash
+az login --tenant <TENANT_ID>
+az ad sp create --id 20e940b3-4c77-4b0b-9a53-9e16a1b010a7
+```
+4) 获取 token 时的 `scope` 固定为：`20e940b3-4c77-4b0b-9a53-9e16a1b010a7/.default`
+5) 将 Entra Tenant ID / App ID 等填入 Partner Center 的 Technical configuration（用于 webhook `aud/tid` 校验与平台识别）
+
+官方步骤（强烈建议按此对齐）：
+- Register a SaaS application：https://learn.microsoft.com/partner-center/marketplace-offers/pc-saas-registration
+
 > SaaS Accelerator 的部署脚本会自动创建所需的 App Registration，并把相关值写入配置与数据库；你的实现可以用 IaC/脚本或手工配置，核心是“值一致且可轮换”。
 
 ---
