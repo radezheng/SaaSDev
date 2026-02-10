@@ -1,0 +1,47 @@
+flowchart TD
+  %% ===== 发布者侧（准备与上架） =====
+  subgraph P[发布者（Partner）侧：准备与上架]
+    P1[定义交付与边界 - 自管 vs 代管 - 入口/网络/镜像/初始化 - 升级/回滚/卸载策略]
+    P2[实现 IaC - Bicep/ARM mainTemplate.json - createUiDefinition.json]
+    P3[实现 Day-0 初始化 - cloud-init/扩展/脚本 - 幂等/可观测/可定位]
+    P4[实现运维可观测 - Log Analytics/Azure Monitor - 诊断导出与审计]
+    P5[打包部署包 - .zip - mainTemplate.json - createUiDefinition.json]
+    P6[Partner Center 配置 - Azure Application Offer - Managed application plan - 定价/Listing/Leads/预览]
+    P1 --> P2 --> P3 --> P4 --> P5 --> P6
+  end
+
+  %% ===== Marketplace / Azure 平台 =====
+  M[(Microsoft Commercial Marketplace)]
+  A[(Azure Portal / ARM 部署)]
+  P6 --> M --> A
+
+  %% ===== 客户侧（部署与资源落地） =====
+  subgraph C[客户订阅：部署与资源落地]
+    C0[客户选择订阅/资源组/参数并触发部署]
+    C1[Managed Application 实例 + 托管资源组 Managed RG]
+    C2[VMSS/VM 集群]
+    C3[VNet/Subnet/NSG]
+    C4[入口：LB / AppGW]
+    C5[Key Vault optional]
+    C6[Log Analytics optional]
+    C0 --> C1
+    C1 --> C2
+    C1 --> C3
+    C1 --> C4
+    C1 --> C5
+    C1 --> C6
+  end
+  A --> C0
+
+  %% ===== 代管访问（如果选择 Partner 代管） =====
+  subgraph O[运维访问边界 optional, 按自管/代管选择启用]
+    O1[托管应用授权 authorizations - 发布方主体 principalId - RBAC 角色 roleDefinitionId]
+    O2[发布方运维动作 - 升级/回滚 - 扩缩容 - 证书/密钥轮换 - 故障处置]
+    O3[审计与护栏 - 变更审批/窗口 - 操作审计日志]
+    O1 --> O2 --> O3
+  end
+  C1 -.optional partner managed.-> O1
+
+  %% ===== 关键说明 =====
+  N1[[备注：纯 Managed App 交付通常不需要 SaaS Fulfillment Resolve/Activate/Webhook 等 API]]
+  M --- N1
